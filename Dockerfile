@@ -18,7 +18,7 @@ RUN pip install --no-cache-dir -e .
 # Copy source tree files
 COPY app/ app/
 COPY schemas/ schemas/
-COPY workers/ workers/
+COPY pipelines/ pipelines/
 COPY media/ media/
 COPY audio/ audio/
 COPY vision/ vision/
