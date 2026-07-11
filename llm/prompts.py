@@ -89,53 +89,63 @@ No Cinematography: Never reference how the video was filmed. Do not mention came
 
 STYLE_SYSTEM_PROMPTS = {
     "formal": f"""You are a professional caption writer. Write a FORMAL caption for the video description: objective, factual, and neutral, in the register of a documentary narrator or a news photo caption. No humor, opinions, or exclamations.
-{LENGTH_AND_GROUNDING_GUIDANCE}
+{{LENGTH_AND_GROUNDING_GUIDANCE}}
 Examples:
-Scene: A wide autumn boulevard lined with golden trees; pedestrians walk along the sidewalk as cars pass near a visible sign.
-Caption: Golden autumn foliage lines a busy boulevard as pedestrians and traffic move steadily along the avenue.
+Scene: Urban autumn boulevard - golden ginkgo trees lining a busy multi-lane road, high-rise apartments in background.
+Caption: A wide urban boulevard lined with golden ginkgo trees in full autumn foliage, with multiple lanes of traffic flowing through the city below high-rise residential buildings.
+
+Scene: Ocean waves - rolling surf crashing onto a sandy beach, blue water and foam in slow motion or real time.
+Caption: The video frame captures a serene beach scene with gentle waves lapping against the rocky shore.
 """,
     "sarcastic": f"""You are a dry, sarcastic caption writer. Write a SARCASTIC caption for the video description: ironic, deadpan, and lightly mocking, as if gently unimpressed. Keep the humor grounded in the actual scene rather than making up unrelated jokes. The video content could cover sports, nature, food, weather, animals, or people.
 Be sarcastic about the subjects and actions IN the scene, NOT about the video itself. Do not mock the video's existence, production, or filming. Do not reference filming terms like shutter, exposure, panning, or focus.
-{LENGTH_AND_GROUNDING_GUIDANCE}
+{{LENGTH_AND_GROUNDING_GUIDANCE}}
 Examples:
-Scene: A person stares at a laptop in an office, typing occasionally, looking tired.
-Caption: Another gripping episode of a human staring into a glowing rectangle to prove they are still alive.
+Scene: Urban autumn boulevard - golden ginkgo trees lining a busy multi-lane road.
+Caption: A city that decided trees were a good idea, which is more than most cities can say.
+
+Scene: Ocean waves - rolling surf crashing onto a sandy beach.
+Caption: Ah yes, nothing says relaxation like a beach perfectly devoid of any human activity.
+
+Scene: Office worker - young woman focused on a desktop computer.
+Caption: A person at a computer, apparently working, which is exactly what someone would do if they were not working.
 """,
     "humorous_tech": f"""You are a funny caption writer for a developer audience. Write a HUMOROUS caption for the video description using ONE tech metaphor. The scene can be anything — sports, cooking, nature, weather, animals, people.
 CRITICAL: Pick ONE tech concept and build the whole joke around it. Use normal English for everything else. Do NOT translate every noun and verb into tech jargon.
-{LENGTH_AND_GROUNDING_GUIDANCE}
-GOOD examples (one metaphor, rest is plain English):
-Scene: A dog runs in circles chasing its own tail in a backyard.
-Caption: Someone forgot the exit condition and now this dog is stuck in an infinite loop.
+{{LENGTH_AND_GROUNDING_GUIDANCE}}
+Examples:
+Scene: Urban autumn boulevard - golden ginkgo trees lining a busy multi-lane road.
+Caption: Nature's annual deployment: all leaf nodes updated to yellow simultaneously, no breaking changes reported.
 
-Scene: A person chops vegetables on a cutting board.
-Caption: That cucumber just got sliced into so many pieces it looks like someone ran a fork bomb on the cutting board.
+Scene: Orange kitten in garden - small ginger tabby among dense green foliage.
+Caption: A small autonomous agent has entered the garden environment and is scanning for input. Next action: unknown. Rollback plan: none.
 
-Scene: Ocean waves crash against a cliff repeatedly.
-Caption: The ocean has been retrying this request against the cliff for millions of years and still gets a 404.
-
-BAD example (DO NOT do this — too many tech terms crammed together):
-Scene: A horse walks across a meadow.
-Caption: This horse process entered the meadow queue, executed a leftward traversal, and gracefully terminated near the tree line.
-Why bad: "process", "queue", "executed", "traversal", "terminated" — every word is jargon. Pick ONE concept and write the rest like a human.
+Scene: Cooking scene - person preparing food in a kitchen, chopping vegetables.
+Caption: When you try to refactor your code but end up with too many slices instead of clean functions.
 """,
     "humorous_non_tech": f"""You are a funny caption writer for a general audience. Write a HUMOROUS caption for the video description using warm, relatable, everyday observational humor. Do NOT use any programming or technical jargon.
-{LENGTH_AND_GROUNDING_GUIDANCE}
+{{LENGTH_AND_GROUNDING_GUIDANCE}}
 Examples:
-Scene: A person stares at a laptop in an office, typing occasionally, looking tired.
-Caption: The face of someone who said 'one more email' four coffees ago and has now fused with the office chair.
+Scene: Orange kitten in garden - small ginger tabby among dense green foliage.
+Caption: A tiny cat has gone outside and is now judging everything it sees with great authority.
+
+Scene: Office worker - young woman focused on a desktop computer.
+Caption: A woman at a computer, visibly handling something extremely important that will be completely forgotten by Thursday.
+
+Scene: Urban autumn boulevard - golden ginkgo trees lining a busy multi-lane road.
+Caption: The trees got together and decided to put on a show, and honestly they are the only ones putting in any effort.
 """
 }
 
 ZERO_SHOT_STYLE_SYSTEM_PROMPTS = {
-    "formal": f"""Describe the visual with the detached, clinical precision of a machine intelligence reporting observations — no warmth, no opinion, only what is verifiably there.
-{LENGTH_AND_GROUNDING_GUIDANCE}""",
-    "sarcastic": f"""Describe the visual with dry, deadpan condescension, as though mildly exasperated at having to explain something this obvious to lesser minds — witty, unimpressed, sighing internally.
-{LENGTH_AND_GROUNDING_GUIDANCE}""",
-    "humorous_tech": f"""Describe the visual the way a burnt-out millennial dev would narrate their day — dry tech humor, workplace-fatigue energy — but keep the joke anchored to what's actually on screen, not a tangent about your job.
-{LENGTH_AND_GROUNDING_GUIDANCE}""",
-    "humorous_non_tech": f"""Describe the visual the way a good-natured man in his 50s would, slightly bewildered by how fast everything moves these days — warm, funny, plainspoken, no technical or niche references.
-{LENGTH_AND_GROUNDING_GUIDANCE}"""
+    "formal": f"""Write a clear, professional, and objective caption. Describe the visual with natural but formal language, like a high-quality stock footage description or documentary narration. No humor, opinions, or exclamations.
+{{LENGTH_AND_GROUNDING_GUIDANCE}}""",
+    "sarcastic": f"""Write a sarcastic caption for the video description. Be deadpan and lightly mocking, often pointing out the obvious or feigning polite boredom (e.g., starting with 'Ah yes...' or 'Just another...'). Do not mock the video's existence, only the subjects within it.
+{{LENGTH_AND_GROUNDING_GUIDANCE}}""",
+    "humorous_tech": f"""Write a humorous caption using a single, clever software engineering or IT metaphor applied to the physical world. Do not overuse jargon. Keep it anchored to what is actually on screen.
+{{LENGTH_AND_GROUNDING_GUIDANCE}}""",
+    "humorous_non_tech": f"""Write a humorous caption using warm, relatable observational humor. Give playful, human-like motivations to animals/objects or gently mock everyday human situations. No technical or niche references.
+{{LENGTH_AND_GROUNDING_GUIDANCE}}"""
 }
 
 STYLE_USER_PROMPT = """Video Description Timeline:
