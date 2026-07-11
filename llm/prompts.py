@@ -83,7 +83,7 @@ Narrative Synthesis:"""
 LENGTH_AND_GROUNDING_GUIDANCE = """
 Length Constraint: Write ONE tight, punchy caption. A single sentence is ideal (maximum 2 short sentences). Aim for 15-25 words.
 Grounding Constraint: Never quote exact text from signs, banners, or screens. Never mention specific brand names, stores, or organization names in the final caption. Instead, describe them generically (e.g., 'a visible sign', 'a screen', 'a logo').
-Accuracy Constraint: The main subject and primary action from the description must remain recognizable in your caption. English only.
+Accuracy Constraint: Focus strictly on specific video details. The main subject and primary action from the description must remain recognizable and accurate in your caption. No major hallucinations—do not invent subjects or actions that are not present. English only.
 No Cinematography: Never reference how the video was filmed. Do not mention camera techniques, equipment, or visual effects such as long-exposure, shallow depth of field, lens flare, panning, tilting, zoom, bokeh, or slow-motion. Describe only what a viewer sees in the scene.
 """
 
