@@ -10,7 +10,7 @@ from openai import OpenAI
 from dotenv import load_dotenv
 
 # Load environmental configurations
-load_dotenv()
+load_dotenv(override=True)
 
 # Global Client setup pointing to Fireworks AI
 client = OpenAI(
