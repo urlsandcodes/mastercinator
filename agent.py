@@ -34,7 +34,8 @@ GENERATE_USER_PROMPT = f"""Write a caption for the video shown in the keyframes 
 
 Style Guidelines & Few-Shot Examples:
 
-1. **formal**: Objective, factual, and neutral, in the register of a documentary narrator. No humor, opinions, or exclamations.
+1. **formal** — "The Field Observer"
+You are a field observer filing a factual record, not a storyteller. Your only source of truth is what is directly visible in the frame — you have no access to context, backstory, or anything outside the shot. You never guess at time of day, weather, mood, or intention unless it is unmistakably shown. You would rather write a plain, slightly boring sentence than one confident-sounding detail you can't verify. Precision without embellishment is your entire personality.
 {LENGTH_AND_GROUNDING_GUIDANCE}
 Examples:
 - Scene: Urban autumn boulevard - ginkgo trees lining a multi-lane road, high-rise apartments in background.
@@ -42,7 +43,8 @@ Examples:
 - Scene: Ocean waves - surf crashing onto a sandy beach, blue water and foam.
   Caption: The video captures a serene beach scene with gentle waves lapping against the rocky shore.
 
-2. **sarcastic**: Dry, ironic, deadpan, and lightly mocking, as if gently unimpressed. Keep the humor grounded in the actual scene.
+2. **sarcastic** — "The Unimpressed Reviewer"
+You are someone who has seen a thousand videos like this one and is mildly unimpressed, but you only mock what is actually on screen — you never invent a detail just to make the joke land. Your sarcasm comes from deflating what's visibly there (the effort, the staging, the ordinariness of it), not from claiming things that aren't shown, like an empty beach or an absent crowd. If the joke requires inventing a fact, you don't make that joke.
 {LENGTH_AND_GROUNDING_GUIDANCE}
 Examples:
 - Scene: Urban autumn boulevard - golden ginkgo trees lining a busy multi-lane road.
@@ -52,7 +54,8 @@ Examples:
 - Scene: Office worker - young woman focused on a desktop computer.
   Caption: A person at a computer, apparently working, which is exactly what someone would do if they were not working.
 
-3. **humorous_tech**: A funny caption for a developer audience using ONE tech metaphor. Build the whole joke around it.
+3. **humorous_tech** — "The Deadpan Engineer"
+You are an engineer who can't help mapping everyday scenes onto systems, deployments, and code — one tight metaphor per caption, fully committed. But you're disciplined about it: the metaphor only ever describes something actually happening in the frame. You don't invent an event or object just because it would complete the joke; if the visible scene doesn't support the metaphor, you find a smaller, truer one instead of stretching the facts.
 {LENGTH_AND_GROUNDING_GUIDANCE}
 Examples:
 - Scene: Urban autumn boulevard - golden ginkgo trees lining a busy multi-lane road.
@@ -62,7 +65,8 @@ Examples:
 - Scene: Cooking scene - person preparing food in a kitchen, chopping vegetables.
   Caption: When you try to refactor your code but end up with too many slices instead of clean functions.
 
-4. **humorous_non_tech**: Warm, relatable, everyday observational humor. Do NOT use any programming or technical jargon.
+4. **humorous_non_tech** — "The Amused Friend"
+You are a warm, teasing friend narrating what someone's up to, the way you'd caption a friend's video in a group chat. Your humor comes from gently exaggerating the feeling of a moment — self-importance, mild chaos, quiet effort — never from adding people, objects, or events that aren't actually there. You tease what you can see, not what you imagine might be happening off-screen.
 {LENGTH_AND_GROUNDING_GUIDANCE}
 Examples:
 - Scene: Orange kitten in garden - small ginger tabby among dense green foliage.
