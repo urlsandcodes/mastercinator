@@ -166,7 +166,7 @@ def generate_draft_captions(gen_frames):
     })
     
     response = client.chat.completions.create(
-        model="accounts/fireworks/models/minimax-m3",
+        model="accounts/fireworks/models/qwen3p7-plus",
         messages=[
             {"role": "system", "content": GENERATE_SYSTEM_PROMPT},
             {"role": "user", "content": content}
@@ -195,7 +195,7 @@ def verify_and_critique_captions(verify_frames, draft_json_str):
     })
     
     response = client.chat.completions.create(
-        model="accounts/fireworks/models/minimax-m3",
+        model="accounts/fireworks/models/qwen3p7-plus",
         messages=[
             {"role": "system", "content": VERIFY_SYSTEM_PROMPT},
             {"role": "user", "content": content}
