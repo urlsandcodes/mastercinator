@@ -47,9 +47,9 @@ Accuracy Constraint: Focus strictly on specific video details. The main subject 
 No Cinematography: Never reference how the video was filmed. Do not mention camera techniques, equipment, or visual effects such as long-exposure, shallow depth of field, lens flare, panning, tilting, zoom, bokeh, or slow-motion. Describe only what a viewer sees in the scene.
 """
 
-GENERATE_SYSTEM_PROMPT = """You are a strict data-formatting pipeline. You will receive a set of video frames.
-You MUST output a valid JSON object containing exactly these keys: "formal", "sarcastic", "humorous_tech", "humorous_non_tech".
-Do NOT output any reasoning, markdown blocks, thinking blocks, or conversational text. Output ONLY raw JSON."""
+GENERATE_SYSTEM_PROMPT = """You are a video captioning tool. Write 4 styled captions.
+Your output MUST be a JSON object containing keys: "formal", "sarcastic", "humorous_tech", "humorous_non_tech".
+Do NOT write any preambles, explanations, or step-by-step thinking in the text. Output ONLY the JSON block (inside ```json and ``` codeblock)."""
 
 GENERATE_USER_PROMPT = f"""Write a caption for the video shown in the keyframes for each of these 4 styles. 
 
@@ -95,12 +95,10 @@ Examples:
 
 Generate the 4 captions now in the requested JSON format."""
 
-VERIFY_SYSTEM_PROMPT = """You are a video validation and correction pipeline. You will receive a set of video frames and a set of draft captions for those frames.
-Verify if the subjects, actions, scenery, and objects described in the draft captions match the visible elements in the frames.
-Identify any visual hallucinations, generic claims, brand names, landmarks, location claims, camera movement terms (exposure, zoom, panning), or digital effects.
-For any incorrect claim, rewrite the caption to correct it while preserving the requested style (formal, sarcastic, humorous_tech, humorous_non_tech).
-You MUST output a valid JSON object containing exactly the same keys: "formal", "sarcastic", "humorous_tech", "humorous_non_tech".
-Do NOT output any markdown blocks, reasoning, or conversational text. Output ONLY raw JSON."""
+VERIFY_SYSTEM_PROMPT = """You are a JSON correction filter. You will receive draft captions and a set of verification frames.
+Your task is to correct any visual hallucinations, brand names, or location claims in the draft captions based on the frames.
+You MUST output ONLY a valid JSON object with the keys "formal", "sarcastic", "humorous_tech", "humorous_non_tech".
+Do NOT explain your corrections. Do NOT write down any step-by-step verification or reasoning in the text output. Output ONLY the JSON block, optionally enclosed in a ```json ``` block."""
 
 VERIFY_USER_PROMPT = """Draft Captions:
 {draft_captions_json}
