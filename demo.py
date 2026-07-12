@@ -1,0 +1,254 @@
+import os
+import tempfile
+import base64
+import json
+import cv2
+import streamlit as st
+from openai import OpenAI
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv(override=True)
+
+# Streamlit Page Setup - Minimal UI
+st.set_page_config(page_title="MasterCinator", page_icon="🎬", layout="centered")
+st.title("MasterCinator")
+
+# Fireworks OpenAI client
+client = OpenAI(
+    base_url="https://api.fireworks.ai/inference/v1",
+    api_key=os.environ.get("FIREWORKS_API_KEY")
+)
+
+# Prompts
+LENGTH_AND_GROUNDING_GUIDANCE = """
+Length Constraint: Write ONE tight, punchy caption. A single sentence is ideal (maximum 2 short sentences). Aim for 15-25 words.
+Grounding Constraint: Never quote exact text from signs, banners, or screens. Never mention specific brand names, stores, or organization names in the final caption. Instead, describe them generically (e.g., 'a visible sign', 'a screen', 'a logo').
+Accuracy Constraint: Focus strictly on specific video details. The main subject and primary action from the description must remain recognizable and accurate in your caption. No major hallucinations—do not invent subjects or actions that are not present. English only.
+No Cinematography: Never reference how the video was filmed. Do not mention camera techniques, equipment, or visual effects such as long-exposure, shallow depth of field, lens flare, panning, tilting, zoom, bokeh, or slow-motion. Describe only what a viewer sees in the scene.
+"""
+
+GENERATE_SYSTEM_PROMPT = """You are a strict data-formatting pipeline. You will receive a set of video frames.
+You MUST output a valid JSON object containing exactly these keys: "formal", "sarcastic", "humorous_tech", "humorous_non_tech".
+Do NOT output any reasoning, markdown blocks, thinking blocks, or conversational text. Output ONLY raw JSON."""
+
+GENERATE_USER_PROMPT = f"""Write a caption for the video shown in the keyframes for each of these 4 styles. 
+
+Style Guidelines & Few-Shot Examples:
+
+1. **formal** — "The Field Observer"
+You are a field observer filing a factual record, not a storyteller. Your only source of truth is what is directly visible in the frame — you have no access to context, backstory, or anything outside the shot. You never guess at time of day, weather, mood, or intention unless it is unmistakably shown. You would rather write a plain, slightly boring sentence than one confident-sounding detail you can't verify. Precision without embellishment is your entire personality.
+{LENGTH_AND_GROUNDING_GUIDANCE}
+Examples:
+- Scene: Urban autumn boulevard - ginkgo trees lining a multi-lane road, high-rise apartments in background.
+  Caption: A wide urban boulevard lined with golden ginkgo trees in full autumn foliage, with multiple lanes of traffic flowing through the city below high-rise residential buildings.
+- Scene: Ocean waves - surf crashing onto a sandy beach, blue water and foam.
+  Caption: The video captures a serene beach scene with gentle waves lapping against the rocky shore.
+
+2. **sarcastic** — "The Unimpressed Reviewer"
+You are someone who has seen a thousand videos like this one and is mildly unimpressed, but you only mock what is actually on screen — you never invent a detail just to make the joke land. Your sarcasm comes from deflating what's visibly there (the effort, the staging, the ordinariness of it), not from claiming things that aren't shown, like an empty beach or an absent crowd. If the joke requires inventing a fact, you don't make that joke.
+{LENGTH_AND_GROUNDING_GUIDANCE}
+Examples:
+- Scene: Urban autumn boulevard - golden ginkgo trees lining a busy multi-lane road.
+  Caption: A city that decided trees were a good idea, which is more than most cities can say.
+- Scene: Ocean waves - rolling surf crashing onto a sandy beach.
+  Caption: Ah yes, nothing says relaxation like a beach perfectly devoid of any human activity.
+- Scene: Office worker - young woman focused on a desktop computer.
+  Caption: A person at a computer, apparently working, which is exactly what someone would do if they were not working.
+
+3. **humorous_tech** — "The Deadpan Engineer"
+You are an engineer who can't help mapping everyday scenes onto systems, deployments, and code — one tight metaphor per caption, fully committed. But you're disciplined about it: the metaphor only ever describes something actually happening in the frame. You don't invent an event or object just because it would complete the joke; if the visible scene doesn't support the metaphor, you find a smaller, truer one instead of stretching the facts.
+{LENGTH_AND_GROUNDING_GUIDANCE}
+Examples:
+- Scene: Urban autumn boulevard - golden ginkgo trees lining a busy multi-lane road.
+  Caption: Nature's annual deployment: all leaf nodes updated to yellow simultaneously, no breaking changes reported.
+- Scene: Orange kitten in garden - small ginger tabby among dense green foliage.
+  Caption: A small autonomous agent has entered the garden environment and is scanning for input. Next action: unknown. Rollback plan: none.
+- Scene: Cooking scene - person preparing food in a kitchen, chopping vegetables.
+  Caption: When you try to refactor your code but end up with too many slices instead of clean functions.
+
+4. **humorous_non_tech** — "The Amused Friend"
+You are a warm, teasing friend narrating what someone's up to, the way you'd caption a friend's video in a group chat. Your humor comes from gently exaggerating the feeling of a moment — self-importance, mild chaos, quiet effort — never from adding people, objects, or events that aren't actually there. You tease what you can see, not what you imagine might be happening off-screen.
+{LENGTH_AND_GROUNDING_GUIDANCE}
+Examples:
+- Scene: Orange kitten in garden - small ginger tabby among dense green foliage.
+  Caption: A tiny cat has gone outside and is now judging everything it sees with great authority.
+- Scene: Office worker - young woman focused on a desktop computer.
+  Caption: A woman at a computer, visibly handling something extremely important that will be completely forgotten by Thursday.
+- Scene: Urban autumn boulevard - golden ginkgo trees lining a busy multi-lane road.
+  Caption: The trees got together and decided to put on a show, and honestly they are the only ones putting in any effort.
+
+Generate the 4 captions now in the requested JSON format."""
+
+VERIFY_SYSTEM_PROMPT = """You are a video validation and correction pipeline. You will receive a set of video frames and a set of draft captions for those frames.
+Verify if the subjects, actions, scenery, and objects described in the draft captions match the visible elements in the frames.
+Identify any visual hallucinations, generic claims, brand names, landmarks, location claims, camera movement terms (exposure, zoom, panning), or digital effects.
+For any incorrect claim, rewrite the caption to correct it while preserving the requested style (formal, sarcastic, humorous_tech, humorous_non_tech).
+You MUST output a valid JSON object containing exactly the same keys: "formal", "sarcastic", "humorous_tech", "humorous_non_tech".
+Do NOT output any markdown blocks, reasoning, or conversational text. Output ONLY raw JSON."""
+
+VERIFY_USER_PROMPT = """Draft Captions:
+{draft_captions_json}
+
+Review the verification frames in detail and output the final validated and corrected JSON object:"""
+
+
+def resize_frame(frame, target_longest_side=1024):
+    height, width = frame.shape[:2]
+    if max(height, width) <= target_longest_side:
+        return frame
+    
+    if width > height:
+        scale = target_longest_side / width
+        new_width = target_longest_side
+        new_height = int(height * scale)
+    else:
+        scale = target_longest_side / height
+        new_height = target_longest_side
+        new_width = int(width * scale)
+        
+    return cv2.resize(frame, (new_width, new_height), interpolation=cv2.INTER_AREA)
+
+
+def extract_exact_8_frames(video_path):
+    video = cv2.VideoCapture(video_path)
+    if not video.isOpened():
+        return []
+        
+    total_frames = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
+    if total_frames <= 0:
+        # Fallback sequential read
+        frames = []
+        while True:
+            ret, frame = video.read()
+            if not ret:
+                break
+            frames.append(frame)
+        video.release()
+        
+        if not frames:
+            return []
+            
+        total_frames = len(frames)
+        interval = max(1, total_frames // 8)
+        selected_frames = []
+        for i in range(8):
+            idx = min(i * interval, total_frames - 1)
+            resized = resize_frame(frames[idx], target_longest_side=1024)
+            _, buffer = cv2.imencode('.jpg', resized)
+            selected_frames.append(base64.b64encode(buffer).decode('utf-8'))
+        return selected_frames
+
+    interval = max(1, total_frames // 8)
+    selected_frames = []
+    for i in range(8):
+        frame_idx = min(i * interval, total_frames - 1)
+        video.set(cv2.CAP_PROP_POS_FRAMES, frame_idx)
+        ret, frame = video.read()
+        if ret:
+            resized = resize_frame(frame, target_longest_side=1024)
+            _, buffer = cv2.imencode('.jpg', resized)
+            selected_frames.append(base64.b64encode(buffer).decode('utf-8'))
+            
+    video.release()
+    return selected_frames
+
+
+def generate_draft_captions(gen_frames):
+    content = [
+        {
+            "type": "image_url",
+            "image_url": {
+                "url": f"data:image/jpeg;base64,{img}"
+            }
+        }
+        for img in gen_frames
+    ]
+    content.append({
+        "type": "text",
+        "text": GENERATE_USER_PROMPT
+    })
+    
+    response = client.chat.completions.create(
+        model="accounts/fireworks/models/minimax-m3",
+        messages=[
+            {"role": "system", "content": GENERATE_SYSTEM_PROMPT},
+            {"role": "user", "content": content}
+        ],
+        max_tokens=1000,
+        temperature=0.7,
+        response_format={"type": "json_object"}
+    )
+    
+    return response.choices[0].message.content.strip()
+
+
+def verify_and_critique_captions(verify_frames, draft_json_str):
+    content = [
+        {
+            "type": "image_url",
+            "image_url": {
+                "url": f"data:image/jpeg;base64,{img}"
+            }
+        }
+        for img in verify_frames
+    ]
+    content.append({
+        "type": "text",
+        "text": VERIFY_USER_PROMPT.format(draft_captions_json=draft_json_str)
+    })
+    
+    response = client.chat.completions.create(
+        model="accounts/fireworks/models/minimax-m3",
+        messages=[
+            {"role": "system", "content": VERIFY_SYSTEM_PROMPT},
+            {"role": "user", "content": content}
+        ],
+        max_tokens=1000,
+        temperature=0.2,
+        response_format={"type": "json_object"}
+    )
+    
+    return response.choices[0].message.content.strip()
+
+
+# File uploader
+video_file = st.file_uploader("Upload a video (max 10MB)", type=["mp4", "mov", "avi"])
+
+if video_file is not None:
+    # Size check
+    if video_file.size > 10 * 1024 * 1024:
+        st.error("Video file is too large! Please upload a file smaller than 10MB.")
+    else:
+        st.success("Upload complete!")
+        
+        # Analyze Button
+        if st.button("Analyze", type="primary"):
+            with st.spinner("Processing video..."):
+                # Save to a temporary file
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as temp_video:
+                    temp_video.write(video_file.read())
+                    temp_video_path = temp_video.name
+                
+                try:
+                    # Extract frames
+                    frames = extract_exact_8_frames(temp_video_path)
+                    
+                    if len(frames) == 8:
+                        gen_frames = [frames[0], frames[2], frames[4], frames[6]]
+                        verify_frames = [frames[1], frames[3], frames[5], frames[7]]
+                        
+                        # VLM Steps
+                        draft_json = generate_draft_captions(gen_frames)
+                        verified_json = verify_and_critique_captions(verify_frames, draft_json)
+                        
+                        # Output raw JSON block only
+                        st.json(json.loads(verified_json))
+                    else:
+                        st.error("Error: Could not extract exactly 8 frames from the uploaded video.")
+                except Exception as e:
+                    st.error(f"Error during analysis: {e}")
+                finally:
+                    # Cleanup
+                    if os.path.exists(temp_video_path):
+                        os.remove(temp_video_path)

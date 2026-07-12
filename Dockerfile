@@ -16,7 +16,7 @@ COPY requirements.txt .env ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy source agent file
-COPY agent.py ./
+COPY agent.py demo.py ./
 
 # Declare required environment variables
 ENV FIREWORKS_API_KEY=""

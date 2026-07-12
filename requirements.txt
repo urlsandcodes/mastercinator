@@ -2,3 +2,4 @@ openai
 opencv-python-headless
 requests
 python-dotenv
+streamlit
