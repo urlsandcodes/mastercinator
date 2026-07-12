@@ -10,13 +10,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 # Copy requirements and credentials
-COPY requirements.txt ./
+COPY requirements.txt .env ./
 
 # Install python dependencies globally inside container
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy source agent file
 COPY agent.py ./
+
+# Declare required environment variables
+ENV FIREWORKS_API_KEY=""
+ENV TASKS_PATH="/input/tasks.json"
+ENV RESULTS_PATH="/output/results.json"
 
 # Pre-create standard mount folders
 RUN mkdir -p /input /output

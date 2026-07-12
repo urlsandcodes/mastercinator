@@ -1,0 +1,11 @@
+[
+    {
+        "task_id": "v1",
+        "captions": {
+            "formal": "A multi-lane urban boulevard is lined with golden autumn trees as heavy traffic flows steadily toward the city center, framed by high-rise residential buildings.",
+            "sarcastic": "A boulevard lined with trees in full autumn glory, surrounded by traffic jams and apartment blocks. Nature did its best; we did ours.",
+            "humorous_tech": "Production server running at full capacity while the frontend decorators deploy their seasonal yellow update across both client and server lanes.",
+            "humorous_non_tech": "The trees are showing off their best colors and the cars are completely ignoring them, which is extremely on brand for a Tuesday commute."
+        }
+    }
+]
