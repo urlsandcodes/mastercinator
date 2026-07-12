@@ -9,27 +9,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Set application workspace
 WORKDIR /app
 
-# Copy package configurations and credentials
-COPY pyproject.toml README.md .env ./
+# Copy requirements and credentials
+COPY requirements.txt .env* ./
 
 # Install python dependencies globally inside container
-RUN pip install --no-cache-dir -e .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy source tree files
-COPY app/ app/
-COPY schemas/ schemas/
-COPY pipelines/ pipelines/
-COPY media/ media/
-COPY audio/ audio/
-COPY vision/ vision/
-COPY fusion/ fusion/
-COPY llm/ llm/
-COPY display/ display/
-COPY demo.py ./
-COPY .streamlit/ .streamlit/
+# Copy source agent file
+COPY agent.py ./
 
 # Pre-create standard mount folders
 RUN mkdir -p /input /output
 
 # Default run entrypoint
-CMD ["python", "-m", "app.main"]
+CMD ["python", "agent.py"]
