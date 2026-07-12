@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 # Copy requirements and credentials
-COPY requirements.txt .env* ./
+COPY requirements.txt ./
 
 # Install python dependencies globally inside container
 RUN pip install --no-cache-dir -r requirements.txt
