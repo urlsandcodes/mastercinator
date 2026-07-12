@@ -40,7 +40,9 @@ def extract_json_block(text):
                 return json.loads(match.group(0))
             except json.JSONDecodeError:
                 pass
-    raise ValueError(f"Could not parse valid JSON from text: {text}"# Shared Grounding Constraints (Few-Shot)
+    raise ValueError(f"Could not parse valid JSON from text: {text}")
+
+# Shared Grounding Constraints (Few-Shot)
 LENGTH_AND_GROUNDING_GUIDANCE_FEW_SHOT = """
 Length Constraint: Write ONE tight, punchy caption. A single sentence is ideal (maximum 2 short sentences). Aim for 15-25 words.
 Grounding Constraint: Never quote exact text from signs, banners, or screens. Never mention specific brand names, stores, or organization names in the final caption. Instead, describe them generically (e.g., 'a visible sign', 'a screen', 'a logo').
@@ -146,7 +148,7 @@ Do NOT output any markdown blocks, reasoning, or conversational text. Output ONL
 VERIFY_USER_PROMPT = """Draft Captions:
 {draft_captions_json}
 
-Review the verification frames in detail and output the final validated and corrected JSON object:"""t:"""
+Review the verification frames in detail and output the final validated and corrected JSON object:"""
 
 
 def resize_frame(frame, target_longest_side=1024):

@@ -145,7 +145,7 @@ Do NOT output any markdown blocks, reasoning, or conversational text. Output ONL
 VERIFY_USER_PROMPT = """Draft Captions:
 {draft_captions_json}
 
-Review the verification frames in detail and output the final validated and corrected JSON object:"""""
+Review the verification frames in detail and output the final validated and corrected JSON object:"""
 
 
 def download_video(url, save_path):
