@@ -39,24 +39,24 @@ def extract_json_block(text):
                 pass
     raise ValueError(f"Could not parse valid JSON from text: {text}")
 
-# Shared Grounding Constraints
-LENGTH_AND_GROUNDING_GUIDANCE = """
+# Shared Grounding Constraints (Few-Shot)
+LENGTH_AND_GROUNDING_GUIDANCE_FEW_SHOT = """
 Length Constraint: Write ONE tight, punchy caption. A single sentence is ideal (maximum 2 short sentences). Aim for 15-25 words.
 Grounding Constraint: Never quote exact text from signs, banners, or screens. Never mention specific brand names, stores, or organization names in the final caption. Instead, describe them generically (e.g., 'a visible sign', 'a screen', 'a logo').
 Accuracy Constraint: Focus strictly on specific video details. The main subject and primary action from the description must remain recognizable and accurate in your caption. No major hallucinations—do not invent subjects or actions that are not present. English only.
 No Cinematography: Never reference how the video was filmed. Do not mention camera techniques, equipment, or visual effects such as long-exposure, shallow depth of field, lens flare, panning, tilting, zoom, bokeh, or slow-motion. Describe only what a viewer sees in the scene.
 """
 
-GENERATE_SYSTEM_PROMPT = """You are a video captioning tool. Write 4 styled captions.
+GENERATE_SYSTEM_PROMPT_FEW_SHOT = """You are a video captioning tool. Write 4 styled captions.
 Your output MUST be a JSON object containing keys: "formal", "sarcastic", "humorous_tech", "humorous_non_tech".
 Do NOT write any preambles, explanations, or step-by-step thinking in the text. Output ONLY the JSON block (inside ```json and ``` codeblock)."""
 
-GENERATE_USER_PROMPT = f"""Write a caption for the video shown in the keyframes for each of these 4 styles. 
+GENERATE_USER_PROMPT_FEW_SHOT = f"""Write a caption for the video shown in the keyframes for each of these 4 styles. 
 
 Style Guidelines & Few-Shot Examples:
 
 1. **formal**: Objective, factual, and neutral, in the register of a documentary narrator. No humor, opinions, or exclamations.
-{LENGTH_AND_GROUNDING_GUIDANCE}
+{LENGTH_AND_GROUNDING_GUIDANCE_FEW_SHOT}
 Examples:
 - Scene: Urban autumn boulevard - ginkgo trees lining a multi-lane road, high-rise apartments in background.
   Caption: A wide urban boulevard lined with golden ginkgo trees in full autumn foliage, with multiple lanes of traffic flowing through the city below high-rise residential buildings.
@@ -64,7 +64,7 @@ Examples:
   Caption: The video captures a serene beach scene with gentle waves lapping against the rocky shore.
 
 2. **sarcastic**: Dry, ironic, deadpan, and lightly mocking, as if gently unimpressed. Keep the humor grounded in the actual scene.
-{LENGTH_AND_GROUNDING_GUIDANCE}
+{LENGTH_AND_GROUNDING_GUIDANCE_FEW_SHOT}
 Examples:
 - Scene: Urban autumn boulevard - golden ginkgo trees lining a busy multi-lane road.
   Caption: A city that decided trees were a good idea, which is more than most cities can say.
@@ -74,7 +74,7 @@ Examples:
   Caption: A person at a computer, apparently working, which is exactly what someone would do if they were not working.
 
 3. **humorous_tech**: A funny caption for a developer audience using ONE tech metaphor. Build the whole joke around it.
-{LENGTH_AND_GROUNDING_GUIDANCE}
+{LENGTH_AND_GROUNDING_GUIDANCE_FEW_SHOT}
 Examples:
 - Scene: Urban autumn boulevard - golden ginkgo trees lining a busy multi-lane road.
   Caption: Nature's annual deployment: all leaf nodes updated to yellow simultaneously, no breaking changes reported.
@@ -84,7 +84,7 @@ Examples:
   Caption: When you try to refactor your code but end up with too many slices instead of clean functions.
 
 4. **humorous_non_tech**: Warm, relatable, everyday observational humor. Do NOT use any programming or technical jargon.
-{LENGTH_AND_GROUNDING_GUIDANCE}
+{LENGTH_AND_GROUNDING_GUIDANCE_FEW_SHOT}
 Examples:
 - Scene: Orange kitten in garden - small ginger tabby among dense green foliage.
   Caption: A tiny cat has gone outside and is now judging everything it sees with great authority.
@@ -95,15 +95,57 @@ Examples:
 
 Generate the 4 captions now in the requested JSON format."""
 
-VERIFY_SYSTEM_PROMPT = """You are a JSON correction filter. You will receive draft captions and a set of verification frames.
+VERIFY_SYSTEM_PROMPT_FEW_SHOT = """You are a JSON correction filter. You will receive draft captions and a set of verification frames.
 Your task is to correct any visual hallucinations, brand names, or location claims in the draft captions based on the frames.
 You MUST output ONLY a valid JSON object with the keys "formal", "sarcastic", "humorous_tech", "humorous_non_tech".
 Do NOT explain your corrections. Do NOT write down any step-by-step verification or reasoning in the text output. Output ONLY the JSON block, optionally enclosed in a ```json ``` block."""
 
-VERIFY_USER_PROMPT = """Draft Captions:
+VERIFY_USER_PROMPT_FEW_SHOT = """Draft Captions:
 {draft_captions_json}
 
 Review the verification frames in detail and output the final validated and corrected JSON object:"""
+
+# Shared Grounding Constraints (Zero-Shot)
+LENGTH_AND_GROUNDING_GUIDANCE = """
+Length Constraint: Write ONE tight, punchy caption. A single sentence is ideal (maximum 2 short sentences). Aim for 15-25 words.
+Grounding Constraint: Never quote exact text from signs, banners, or screens. Never mention specific brand names, stores, or organization names in the final caption. Instead, describe them generically (e.g., 'a visible sign', 'a screen', 'a logo').
+Accuracy Constraint: Focus strictly on specific video details. The main subject and primary action from the description must remain recognizable and accurate in your caption. No major hallucinations—do not invent subjects or actions that are not present. English only.
+No Cinematography: Never reference how the video was filmed. Do not mention camera techniques, equipment, or visual effects such as long-exposure, shallow depth of field, lens flare, panning, tilting, zoom, bokeh, or slow-motion. Describe only what a viewer sees in the scene.
+Factual Grounding: The caption must include description of the video, and only what is happening in the video is to be referenced for generating styled captions.
+"""
+
+GENERATE_SYSTEM_PROMPT = """You are a video captioning pipeline. You will receive video frames.
+Output a valid JSON object with exactly these keys: "formal", "sarcastic", "humorous_tech", "humorous_non_tech".
+Do NOT output any reasoning, markdown blocks, or conversational text. Output ONLY raw JSON."""
+
+GENERATE_USER_PROMPT = f"""Write a caption for the video shown in the keyframes for each of these 4 styles. 
+
+Style Guidelines:
+
+1. **formal**: Objective, factual, and neutral, in the register of a documentary narrator. No humor, opinions, or exclamations.
+{LENGTH_AND_GROUNDING_GUIDANCE}
+
+2. **sarcastic**: Dry, ironic, deadpan, and lightly mocking, as if gently unimpressed. Keep the humor grounded in the actual scene but you may use ironic comparisons or references to make your point.
+{LENGTH_AND_GROUNDING_GUIDANCE}
+
+3. **humorous_tech**: A funny caption for a developer audience using ONE tech metaphor. Build the whole joke around that single metaphor. The metaphor must map clearly to something visible in the video.
+{LENGTH_AND_GROUNDING_GUIDANCE}
+
+4. **humorous_non_tech**: Warm, relatable, everyday observational humor. Do NOT use any programming or technical jargon. You may use similes, comparisons, or everyday references to amplify the humor, but the observation must be rooted in the scene.
+{LENGTH_AND_GROUNDING_GUIDANCE}
+
+Generate the 4 captions now in the requested JSON format."""
+
+VERIFY_SYSTEM_PROMPT = """You are a video validation and correction pipeline. You will receive video frames and draft captions.
+Verify that the subjects, actions, scenery, and objects in the draft captions match the visible elements in the frames.
+Identify any visual hallucinations, brand names, location claims, or cinematography terms. Correct them while preserving each caption's style.
+Output a valid JSON object with exactly the keys: "formal", "sarcastic", "humorous_tech", "humorous_non_tech".
+Do NOT output any markdown blocks, reasoning, or conversational text. Output ONLY raw JSON."""
+
+VERIFY_USER_PROMPT = """Draft Captions:
+{draft_captions_json}
+
+Review the verification frames in detail and output the final validated and corrected JSON object:"""""
 
 
 def download_video(url, save_path):
@@ -190,7 +232,7 @@ def extract_exact_8_frames(video_path):
 
 
 def generate_draft_captions(gen_frames):
-    print("Call 1: Generating draft captions using Qwen 3.7 Plus...")
+    print("Call 1: Generating draft captions using MiniMax M3...")
     content = [
         {
             "type": "image_url",
@@ -206,7 +248,7 @@ def generate_draft_captions(gen_frames):
     })
     
     response = client.chat.completions.create(
-        model="accounts/fireworks/models/qwen3p7-plus",
+        model="accounts/fireworks/models/minimax-m3",
         messages=[
             {"role": "system", "content": GENERATE_SYSTEM_PROMPT},
             {"role": "user", "content": content}
@@ -221,7 +263,7 @@ def generate_draft_captions(gen_frames):
 
 
 def verify_and_critique_captions(verify_frames, draft_json_str):
-    print("Call 2: Verifying and critiquing captions using Qwen 3.7 Plus...")
+    print("Call 2: Verifying and critiquing captions using MiniMax M3...")
     content = [
         {
             "type": "image_url",
@@ -237,7 +279,7 @@ def verify_and_critique_captions(verify_frames, draft_json_str):
     })
     
     response = client.chat.completions.create(
-        model="accounts/fireworks/models/qwen3p7-plus",
+        model="accounts/fireworks/models/minimax-m3",
         messages=[
             {"role": "system", "content": VERIFY_SYSTEM_PROMPT},
             {"role": "user", "content": content}
