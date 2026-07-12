@@ -6,6 +6,7 @@ import cv2
 import streamlit as st
 from openai import OpenAI
 from dotenv import load_dotenv
+import re
 
 # Load environment variables
 load_dotenv(override=True)
@@ -19,6 +20,27 @@ client = OpenAI(
     base_url="https://api.fireworks.ai/inference/v1",
     api_key=os.environ.get("FIREWORKS_API_KEY")
 )
+
+def extract_json_block(text):
+    text_clean = text.strip()
+    if text_clean.startswith("```"):
+        lines = text_clean.splitlines()
+        if lines[0].startswith("```"):
+            lines = lines[1:]
+        if lines and lines[-1].startswith("```"):
+            lines = lines[:-1]
+        text_clean = "\n".join(lines).strip()
+    
+    try:
+        return json.loads(text_clean)
+    except json.JSONDecodeError:
+        match = re.search(r'\{.*\}', text_clean, re.DOTALL)
+        if match:
+            try:
+                return json.loads(match.group(0))
+            except json.JSONDecodeError:
+                pass
+    raise ValueError(f"Could not parse valid JSON from text: {text}")
 
 # Prompts
 LENGTH_AND_GROUNDING_GUIDANCE = """
@@ -171,12 +193,13 @@ def generate_draft_captions(gen_frames):
             {"role": "system", "content": GENERATE_SYSTEM_PROMPT},
             {"role": "user", "content": content}
         ],
-        max_tokens=1000,
-        temperature=0.7,
-        response_format={"type": "json_object"}
+        max_tokens=2000,
+        temperature=0.7
     )
     
-    return response.choices[0].message.content.strip()
+    raw_content = response.choices[0].message.content.strip()
+    parsed = extract_json_block(raw_content)
+    return json.dumps(parsed)
 
 
 def verify_and_critique_captions(verify_frames, draft_json_str):
@@ -200,12 +223,13 @@ def verify_and_critique_captions(verify_frames, draft_json_str):
             {"role": "system", "content": VERIFY_SYSTEM_PROMPT},
             {"role": "user", "content": content}
         ],
-        max_tokens=1000,
-        temperature=0.2,
-        response_format={"type": "json_object"}
+        max_tokens=2000,
+        temperature=0.2
     )
     
-    return response.choices[0].message.content.strip()
+    raw_content = response.choices[0].message.content.strip()
+    parsed = extract_json_block(raw_content)
+    return json.dumps(parsed)
 
 
 # File uploader
